@@ -1,5 +1,10 @@
 package mp4box
 
+import (
+	"bytes"
+	"encoding/binary"
+)
+
 type ftyp_box struct {
 	major_brand       [4]byte
 	minor_version     uint32

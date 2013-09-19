@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"github.com/heartszhang/mp4box"
 	"io"
 	"os"
 )
@@ -18,6 +19,20 @@ type box struct {
 type strings []string
 
 func main() {
+	flag.Parse()
+	if *input == "" {
+		flag.PrintDefaults()
+		return
+	}
+	f, e := os.Open(*input)
+	if e != nil {
+		fmt.Println(e)
+		return
+	}
+	defer f.Close()
+	mp4box.NewMp4Media(f)
+}
+func main2() {
 	flag.Parse()
 	if *input == "" {
 		flag.PrintDefaults()

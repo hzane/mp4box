@@ -1,9 +1,14 @@
 package mp4box
 
+import (
+	"bytes"
+	"encoding/binary"
+)
+
 // sample table sample descriptions
 type stsd_box struct {
 	//	full_box_header
-	count   uint32
+	count   int32
 	entries []stsd_entry // headed by generic_sample_description
 }
 type stsd_entry struct {
@@ -12,18 +17,19 @@ type stsd_entry struct {
 }
 
 func (this *encoded_box) to_stsd() stsd_box {
-	reader := bytes.NewBuffer(this)
+	reader := bytes.NewBuffer([]byte(*this))
 	//	var h full_box_header
 	binary.Read(reader, binary.BigEndian, &full_box_header{})
 	var v stsd_box
 	binary.Read(reader, binary.BigEndian, &v.count)
-	v.entries = make([]mp4_sample_description, v.count)
+	v.entries = make([]stsd_entry, v.count)
 
-	for i := 0; i < v.count; i++ {
+	for i := 0; i < int(v.count); i++ {
 		h := next_box_header(reader)
-		copy(v.entries[i].typ, h.typ)
+		copy(v.entries[i].typ[:], h.typ[:])
 		v.entries[i].body = next_box_body(reader, h)
 	}
+	return v
 }
 
 type generic_sample_description struct {
@@ -31,8 +37,8 @@ type generic_sample_description struct {
 	DataReferIndex uint16 // dref index
 }
 
-const (
-	sample_description_data_formats = []string{`jpeg`, `png `, `mp4v`, `avc1`, `gif `,
+var (
+	sample_description_data_formats = [...]string{`jpeg`, `png `, `mp4v`, `avc1`, `gif `,
 		`h263`, `tiff`, `mp4a`, `avcc`}
 )
 
@@ -52,9 +58,9 @@ type video_sample_description_box struct {
 	CompressorName       [32]byte // pascal string
 	Depth                uint16   //1,2,4,8,16, 24, 32, 34, 36, 40 color depth. 34,36,40 means 2-,4-,8-bit grayscale
 	ColorTableID         int16    // -1 means use default color table. mac color table, 0 means self descripted color table
-	colr                 colr_box // may be null
-	esds                 esds_box
-	avcc                 avcc_box
+	//	colr                 colr_box // may be null
+	esds esds_box
+	avcc avcc_box
 }
 
 // avc decoder configuration

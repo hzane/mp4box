@@ -1,5 +1,10 @@
 package mp4box
 
+import (
+	"bytes"
+	"encoding/binary"
+)
+
 // media header
 // contained in mdia
 // size is 24 bytes
@@ -29,7 +34,7 @@ type mdhd_box mdhd_v1_box
 func (this *encoded_box) to_mdhd() mdhd_box {
 	v := mdhd_box{}
 	var h full_box_header
-	reader := bytes.NewBuffer(this)
+	reader := bytes.NewBuffer([]byte(*this))
 	binary.Read(reader, binary.BigEndian, &h)
 	switch h.Version {
 	default:

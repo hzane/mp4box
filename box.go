@@ -8,19 +8,22 @@ import (
 
 type encoded_box []byte
 type mp4_box_header struct {
-	size      uint64
+	size      int64
 	typ       [4]byte
-	body_size uint64
+	body_size int64
 }
 
-func next_box_header(reader io.Read) (v mp4_box_header) {
-	var mp4_box_header_default_size uint64 = 8 // sizeof(size) + sizeof(type)
+func (this mp4_box_header) box_type() string {
+	return string(this.typ[:])
+}
+func next_box_header(reader io.Reader) (v mp4_box_header) {
+	var mp4_box_header_default_size int64 = 8 // sizeof(size) + sizeof(type)
 	var size uint32
 	binary.Read(reader, binary.BigEndian, &size)
 	switch size {
 	default:
-		v.size = uint64(size)
-		body_size = v.size - mp4_box_header_default_size
+		v.size = int64(size)
+		v.body_size = v.size - mp4_box_header_default_size
 		binary.Read(reader, binary.BigEndian, &v.typ)
 	case 1:
 		binary.Read(reader, binary.BigEndian, &v.typ)
@@ -32,23 +35,23 @@ func next_box_header(reader io.Read) (v mp4_box_header) {
 	return
 }
 
-func next_box_body(reader io.Read, h mp4_box_header) encoded_box {
+func next_box_body(reader io.Reader, h mp4_box_header) encoded_box {
 	x := make(encoded_box, h.body_size)
 	reader.Read(x)
 	return x
 }
 
-func foreach_child_box(b encoded_box, f func(child encoded_box)) {
-	buf := bytes.NewBuffer(b)
+func foreach_child_box(b encoded_box, f func(child encoded_box, h mp4_box_header)) {
+	buf := bytes.NewBuffer([]byte(b))
 	for {
 		header := next_box_header(buf)
 		body := next_box_body(buf, header)
-		f(&cb, header)
+		f(body, header)
 	}
 }
 
 func (this *encoded_box) to_uint32_slice() []uint32 {
-	reader := bytes.NewBuffer(this)
+	reader := bytes.NewBuffer([]byte(*this))
 	binary.Read(reader, binary.BigEndian, &full_box_header{})
 	var count uint32
 	binary.Read(reader, binary.BigEndian, &count)
