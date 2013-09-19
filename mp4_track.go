@@ -28,7 +28,7 @@ type mp4_track struct {
 	timestamp_count int
 	timestamps      []mp4_timestamp
 
-	sync_samples []uint32
+	sync_samples []int32
 }
 
 func (this *mp4_track) from_tkhd(tkhd encoded_box) {
@@ -80,7 +80,7 @@ func (this *mp4_track) from_stbl(stbl encoded_box) {
 	var stsd []stsd_entry
 	var stts []stts_entry
 	var stsc []stsc_entry
-	var stco, stss []uint32
+	var stco, stss []int32
 	var stsz stsz_box
 
 	foreach_child_box(stbl, func(child encoded_box, header mp4_box_header) {
@@ -108,8 +108,8 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 	stts []stts_entry,
 	stsc []stsc_entry,
 	stsz stsz_box,
-	stco []uint32,
-	stss []uint32) {
+	stco []int32,
+	stss []int32) {
 
 	this.sample_count = int(stsz.count)
 	this.samples = make([]mp4_sample, this.sample_count)
@@ -138,7 +138,7 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 		this.timestamps[idx].samples_count = ts.count
 		this.timestamps[idx].time_start = time_start
 		this.timestamps[idx].duration = int64(ts.duration)
-		log.Println(start, time_start, ts.count, `stts`, this.sample_count)
+		//		log.Println(start, time_start, ts.count, `stts`, this.sample_count)
 		for se := start + ts.count; start < se; start++ {
 			this.samples[start].duration = int64(ts.duration)
 			this.samples[start].start_time = time_start
