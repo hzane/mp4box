@@ -42,7 +42,7 @@ func (this *mp4_track) from_tkhd(tkhd encoded_box) {
 
 func (this *mp4_track) from_mdia(mdia encoded_box) {
 	foreach_child_box(mdia, func(child encoded_box, header mp4_box_header) {
-		log.Println(header.typ, header.body_size, `------`)
+		log.Println(header.box_type(), header.body_size, `in mdia`)
 		switch header.box_type() {
 		case "mdhd":
 			this.from_mdhd(child)
@@ -62,7 +62,7 @@ func (this *mp4_track) from_mdhd(mdhd encoded_box) {
 
 func (this *mp4_track) from_minf(minf encoded_box) {
 	foreach_child_box(minf, func(child encoded_box, header mp4_box_header) {
-		log.Println(header.typ, header.body_size, `			`)
+		log.Println(header.box_type(), header.body_size, `in minf`)
 		switch header.box_type() {
 		case "vmhd":
 			this.track_type = track_type_video
@@ -80,10 +80,11 @@ func (this *mp4_track) from_stbl(stbl encoded_box) {
 	var stsd []stsd_entry
 	var stts []stts_entry
 	var stsc []stsc_entry
-	var stsz, stco, stss []uint32
+	var stco, stss []uint32
+	var stsz stsz_box
 
 	foreach_child_box(stbl, func(child encoded_box, header mp4_box_header) {
-		log.Println(header.typ, header.body_size, `			`)
+		log.Println(header.box_type(), header.body_size, `in stbl`)
 		switch header.box_type() {
 		case "stsd":
 			stsd = child.to_stsd().entries
@@ -106,14 +107,18 @@ func (this *mp4_track) from_stbl(stbl encoded_box) {
 func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 	stts []stts_entry,
 	stsc []stsc_entry,
-	stsz []uint32,
+	stsz stsz_box,
 	stco []uint32,
 	stss []uint32) {
 
-	this.sample_count = len(stsz)
+	this.sample_count = int(stsz.count)
 	this.samples = make([]mp4_sample, this.sample_count)
-	for idx, ss := range stsz {
-		this.samples[idx].size = int64(ss)
+	for idx := 0; idx < this.sample_count; idx++ {
+		if stsz.size != 0 {
+			this.samples[idx].size = int64(stsz.size)
+		} else {
+			this.samples[idx].size = int64(stsz.entries[idx])
+		}
 	}
 
 	this.chunk_count = len(stco)
@@ -130,14 +135,14 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 	var start int32 = 0
 	for idx, ts := range stts {
 		this.timestamps[idx].sample_start = start
-		this.timestamps[idx].samples_count = ts.Count
+		this.timestamps[idx].samples_count = ts.count
 		this.timestamps[idx].time_start = time_start
-		this.timestamps[idx].duration = int64(ts.Duration)
-
-		for se := start + ts.Count; start < se; start++ {
-			this.samples[start].duration = int64(ts.Duration)
+		this.timestamps[idx].duration = int64(ts.duration)
+		log.Println(start, time_start, ts.count, `stts`, this.sample_count)
+		for se := start + ts.count; start < se; start++ {
+			this.samples[start].duration = int64(ts.duration)
 			this.samples[start].start_time = time_start
-			time_start += int64(ts.Duration)
+			time_start += int64(ts.duration)
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 )
 
 // sample table sample to chunk
+
 type stsc_box struct {
 	//	full_box_header
 	count   int32

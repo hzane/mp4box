@@ -10,10 +10,10 @@ import (
 // size is 24 bytes
 type mdhd_v0_box struct {
 	//	full_box_header  // full_box_header.Version == 0
-	CreationTime     uint32
-	ModificationTime uint32
-	TimeScale        uint32
-	Duration         uint32
+	CreationTime     int32
+	ModificationTime int32
+	TimeScale        int32
+	Duration         int32
 	Language         uint16
 	Quality          uint16
 }
@@ -21,10 +21,10 @@ type mdhd_v0_box struct {
 // size is 36 bytes
 type mdhd_v1_box struct {
 	//	full_box_header  // full_box_header.Version == 1
-	CreationTime     uint64
-	ModificationTime uint64
-	TimeScale        uint32
-	Duration         uint64
+	CreationTime     int64
+	ModificationTime int64
+	TimeScale        int32
+	Duration         int64
 	Language         uint16
 	Quality          uint16
 }
@@ -40,10 +40,10 @@ func (this *encoded_box) to_mdhd() mdhd_box {
 	default:
 		var v0 mdhd_v0_box
 		binary.Read(reader, binary.BigEndian, &v0)
-		v.CreationTime = uint64(v0.CreationTime)
-		v.ModificationTime = uint64(v0.ModificationTime)
+		v.CreationTime = int64(v0.CreationTime)
+		v.ModificationTime = int64(v0.ModificationTime)
 		v.TimeScale = v0.TimeScale
-		v.Duration = uint64(v0.Duration)
+		v.Duration = int64(v0.Duration)
 		v.Language = v0.Language
 		v.Quality = v0.Quality
 	case 1:

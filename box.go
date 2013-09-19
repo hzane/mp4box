@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"io"
+	"log"
 )
 
 type encoded_box []byte
@@ -45,6 +46,9 @@ func foreach_child_box(b encoded_box, f func(child encoded_box, h mp4_box_header
 	buf := bytes.NewBuffer([]byte(b))
 	for {
 		header := next_box_header(buf)
+		if header.size == 0 {
+			break
+		}
 		body := next_box_body(buf, header)
 		f(body, header)
 	}
@@ -57,6 +61,7 @@ func (this *encoded_box) to_uint32_slice() []uint32 {
 	binary.Read(reader, binary.BigEndian, &count)
 	v := make([]uint32, count)
 	binary.Read(reader, binary.BigEndian, &v)
+	log.Println(count, `to []uint32`)
 	return v
 }
 

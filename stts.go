@@ -14,8 +14,8 @@ type stts_box struct {
 
 // timestamp to sample
 type stts_entry struct {
-	Count    int32 // sample count
-	Duration int32 // sample duration
+	count    int32 // sample count
+	duration int32 // sample duration
 }
 
 func (this *encoded_box) to_stts() stts_box {
@@ -25,7 +25,8 @@ func (this *encoded_box) to_stts() stts_box {
 	binary.Read(reader, binary.BigEndian, &v.count)
 	v.entries = make([]stts_entry, v.count)
 	for i := 0; i < int(v.count); i++ {
-		binary.Read(reader, binary.BigEndian, &v.entries[i])
+		binary.Read(reader, binary.BigEndian, &v.entries[i].count)
+		binary.Read(reader, binary.BigEndian, &v.entries[i].duration)
 	}
 	return v
 }
