@@ -110,6 +110,7 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 	stsz stsz_box,
 	stco []uint32,
 	stss []uint32) {
+	log.Println(`stsz-count`, stsz.count, `stsz.size`, stsz.size)
 
 	this.sample_count = int(stsz.count)
 	this.samples = make([]mp4_sample, this.sample_count)
@@ -120,8 +121,8 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 			this.samples[idx].size = uint64(stsz.entries[idx])
 		}
 	}
-
 	this.chunk_count = len(stco)
+	log.Println(this.chunk_count, `sample table chunk count`)
 	this.chunks = make([]mp4_chunk, this.chunk_count)
 	for idx, c := range stco {
 		this.chunks[idx].offset = uint64(c)
@@ -130,6 +131,7 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 	// time to sample
 	this.timestamp_count = len(stts)
 	this.timestamps = make([]mp4_timestamp, this.timestamp_count)
+	log.Println(this.timestamp_count, `sample table timestamp count`)
 
 	var time_start uint64 = 0
 	var start uint32 = 0
@@ -144,20 +146,16 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 			this.samples[start].start_time = time_start
 			time_start += uint64(ts.duration)
 		}
+		log.Println(`time`, time_start, `sample`, start, `timestamp to sample`)
 	}
 
-	/*
-		First               uint32 // first chunk
-		SamplesPerChunk     uint32 // samples per chunk
-		SampleDescriptionId uint32 // sample description id  , index of stsd
-	*/
 	start = 0
 	for idx, sc := range stsc {
 		end := this.chunk_count
 		if idx < len(stsc)-1 {
-			end = int(stsc[idx+1].First)
+			end = int(stsc[idx+1].First - 1) // first start at 1
 		}
-		for i := int(sc.First); i < end; i++ {
+		for i := int(sc.First) - 1; i < end; i++ { // First start at 1
 			this.chunks[i].sample_start = start
 			this.chunks[i].sample_count = sc.SamplesPerChunk
 			this.chunks[i].sample_description_id = sc.SampleDescriptionId
@@ -173,6 +171,6 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 
 	this.sync_samples = stss
 	for _, sample_id := range stss {
-		this.samples[sample_id].is_sync_sample = true
+		this.samples[sample_id-1].is_sync_sample = true
 	}
 }
