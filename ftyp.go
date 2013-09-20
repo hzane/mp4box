@@ -11,6 +11,20 @@ type ftyp_box struct {
 	compatible_brands [][4]byte
 }
 
+func (this ftyp_box) major() string {
+	return string(this.major_brand[:])
+}
+func (this ftyp_box) brands() []string {
+	if this.compatible_brands == nil {
+		return nil
+	}
+	brands := make([]string, len(this.compatible_brands))
+	for idx, cb := range this.compatible_brands {
+		brands[idx] = string(cb[:])
+	}
+	return brands
+}
+
 func (this encoded_box) to_ftyp() (r ftyp_box) {
 	var compatible_brands_offset_in_ftyp = 8 // sizeof(major) + sizeof(minor)
 	buf := bytes.NewBuffer(this)
