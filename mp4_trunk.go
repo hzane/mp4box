@@ -1,13 +1,13 @@
 package mp4box
 
 type mp4_chunk struct {
-	sample_start          int32
-	sample_count          int32
-	sample_description_id int32
+	sample_start          uint32
+	sample_count          uint32
+	sample_description_id uint32
 
-	time_start     int64 // timescale
-	duration       int64 // timescale
-	offset         int64 // file position
-	length         int64 // bytes
-	offset_in_mdat int64
+	time_start     uint64 // timescale
+	duration       uint64 // timescale
+	offset         uint64 // file position
+	length         uint64 // bytes
+	offset_in_mdat uint64
 }

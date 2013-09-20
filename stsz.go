@@ -8,8 +8,8 @@ import (
 // sample table sample size
 type stsz_box struct {
 	//	full_box_header
-	size    int32    // sample size if all sample has the same size
-	count   int32    // sample count
+	size    uint32   // sample size if all sample has the same size
+	count   uint32   // sample count
 	entries []uint32 // sample size table
 }
 

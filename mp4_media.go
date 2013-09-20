@@ -10,23 +10,23 @@ type Mp4Media struct {
 	video_track mp4_track // has desc
 	audio_track mp4_track // has desc
 
-	video_desc mp4_sample_description
-	audio_desc mp4_sample_description
+	video_desc stsd_entry
+	audio_desc stsd_entry
 
 	samples      []mp4_sample
 	chunks       []mp4_chunk
 	timestamps   []mp4_timestamp
 	sync_samples []uint32
 
-	mdat_offset      int64 // in file position byte
-	ftyp_offset      int64 // in file
-	moov_offset      int64 // in line
-	moov_body_length int64
-	mdat_body_length int64
-	time_scale       int64
-	duration         int64
+	mdat_offset      uint64 // in file position byte
+	ftyp_offset      uint64 // in file
+	moov_offset      uint64 // in line
+	moov_body_length uint64
+	mdat_body_length uint64
+	time_scale       uint64
+	duration         uint64
 	volume           uint16
-	rate             int32
+	rate             uint32
 
 	brand string
 }
@@ -46,7 +46,7 @@ L:
 		}
 		switch string(h.typ[:]) {
 		default:
-			reader.Seek(h.body_size, 1)
+			reader.Seek(int64(h.body_size), 1)
 		case "moov":
 			//			mo, _ := reader.Seek(0, 1)
 			//			fd.moov_offset = mo - (h.size - h.body_size)
@@ -57,7 +57,7 @@ L:
 			//			mo, _ := reader.Seek(0, 1)
 			//			fd.mdat_offset = mo - (h.size - h.body_size)
 			fd.mdat_body_length = h.body_size
-			reader.Seek(h.body_size, 1)
+			reader.Seek(int64(h.body_size), 1)
 		}
 	}
 	return
@@ -65,8 +65,8 @@ L:
 
 func (this *Mp4Media) from_mvhd(mvhd encoded_box) {
 	mvheader := mvhd.to_mvhd()
-	this.time_scale = int64(mvheader.TimeScale)
-	this.duration = int64(mvheader.Duration)
+	this.time_scale = uint64(mvheader.TimeScale)
+	this.duration = uint64(mvheader.Duration)
 	this.rate = mvheader.Rate
 	this.volume = mvheader.Volume
 }

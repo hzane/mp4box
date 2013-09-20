@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 )
 
+// media information header box
+// container: media information box
 type vmhd_box struct {
 	//	full_box_header
 	GraphicsMode uint16

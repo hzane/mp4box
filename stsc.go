@@ -9,14 +9,14 @@ import (
 
 type stsc_box struct {
 	//	full_box_header
-	count   int32
+	count   uint32
 	entries []stsc_entry
 }
 
 type stsc_entry struct {
-	First               int32 // first chunk index
-	SamplesPerChunk     int32 // samples per chunk
-	SampleDescriptionId int32 // sample description id  , index of stsd
+	First               uint32 // first chunk index
+	SamplesPerChunk     uint32 // samples per chunk
+	SampleDescriptionId uint32 // sample description id  , index of stsd
 }
 
 func (this *encoded_box) to_stsc() stsc_box {

@@ -8,6 +8,6 @@ type stco_box struct {
 	entries []uint32 // chunk offset table
 }
 */
-func (this *encoded_box) to_stco() []int32 {
-	return this.to_int32_slice()
+func (this *encoded_box) to_stco() []uint32 {
+	return this.to_uint32_slice()
 }

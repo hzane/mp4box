@@ -8,14 +8,14 @@ import (
 // sample table time to sample map
 type stts_box struct {
 	//	full_box_header
-	count   int32
+	count   uint32
 	entries []stts_entry
 }
 
 // timestamp to sample
 type stts_entry struct {
-	count    int32 // sample count
-	duration int32 // sample duration
+	count    uint32 // sample count
+	duration uint32 // sample duration
 }
 
 func (this *encoded_box) to_stts() stts_box {

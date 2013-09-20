@@ -14,11 +14,11 @@ const (
 
 type mp4_track struct {
 	track_type   int
-	track_id     int32
-	duration     int64
+	track_id     uint32
+	duration     uint64
 	volume       uint16
-	width        int32
-	height       int32
+	width        uint32
+	height       uint32
 	sample_count int
 	samples      []mp4_sample
 
@@ -28,7 +28,7 @@ type mp4_track struct {
 	timestamp_count int
 	timestamps      []mp4_timestamp
 
-	sync_samples []int32
+	sync_samples []uint32
 }
 
 func (this *mp4_track) from_tkhd(tkhd encoded_box) {
@@ -80,7 +80,7 @@ func (this *mp4_track) from_stbl(stbl encoded_box) {
 	var stsd []stsd_entry
 	var stts []stts_entry
 	var stsc []stsc_entry
-	var stco, stss []int32
+	var stco, stss []uint32
 	var stsz stsz_box
 
 	foreach_child_box(stbl, func(child encoded_box, header mp4_box_header) {
@@ -108,41 +108,41 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 	stts []stts_entry,
 	stsc []stsc_entry,
 	stsz stsz_box,
-	stco []int32,
-	stss []int32) {
+	stco []uint32,
+	stss []uint32) {
 
 	this.sample_count = int(stsz.count)
 	this.samples = make([]mp4_sample, this.sample_count)
 	for idx := 0; idx < this.sample_count; idx++ {
 		if stsz.size != 0 {
-			this.samples[idx].size = int64(stsz.size)
+			this.samples[idx].size = uint64(stsz.size)
 		} else {
-			this.samples[idx].size = int64(stsz.entries[idx])
+			this.samples[idx].size = uint64(stsz.entries[idx])
 		}
 	}
 
 	this.chunk_count = len(stco)
 	this.chunks = make([]mp4_chunk, this.chunk_count)
 	for idx, c := range stco {
-		this.chunks[idx].offset = int64(c)
+		this.chunks[idx].offset = uint64(c)
 	}
 
 	// time to sample
 	this.timestamp_count = len(stts)
 	this.timestamps = make([]mp4_timestamp, this.timestamp_count)
 
-	var time_start int64 = 0
-	var start int32 = 0
+	var time_start uint64 = 0
+	var start uint32 = 0
 	for idx, ts := range stts {
 		this.timestamps[idx].sample_start = start
 		this.timestamps[idx].samples_count = ts.count
 		this.timestamps[idx].time_start = time_start
-		this.timestamps[idx].duration = int64(ts.duration)
+		this.timestamps[idx].duration = uint64(ts.duration)
 		//		log.Println(start, time_start, ts.count, `stts`, this.sample_count)
 		for se := start + ts.count; start < se; start++ {
-			this.samples[start].duration = int64(ts.duration)
+			this.samples[start].duration = uint64(ts.duration)
 			this.samples[start].start_time = time_start
-			time_start += int64(ts.duration)
+			time_start += uint64(ts.duration)
 		}
 	}
 
@@ -161,9 +161,9 @@ func (this *mp4_track) fill_sample_tables(stsd []stsd_entry,
 			this.chunks[i].sample_start = start
 			this.chunks[i].sample_count = sc.SamplesPerChunk
 			this.chunks[i].sample_description_id = sc.SampleDescriptionId
-			var inchunk_offset int64 = 0
+			var inchunk_offset uint64 = 0
 			for se := start + sc.SamplesPerChunk; start < se; start++ {
-				this.samples[start].chunk_id = int32(i)
+				this.samples[start].chunk_id = uint32(i)
 				this.samples[start].in_chunk_offset = inchunk_offset
 				//				this.samples[start].description_id = sc.sample_description_id
 				inchunk_offset += this.samples[start].size

@@ -8,6 +8,6 @@ type stss_box struct {
 	entries []uint32 // sample index corresponds to key frame
 }*/
 
-func (this *encoded_box) to_stss() []int32 {
-	return this.to_int32_slice()
+func (this *encoded_box) to_stss() []uint32 {
+	return this.to_uint32_slice()
 }
