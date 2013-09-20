@@ -8,12 +8,13 @@ import (
 // sample table sample descriptions
 type stsd_box struct {
 	//	full_box_header
-	count   int32
-	entries []stsd_entry // headed by generic_sample_description
+	count   uint32
+	entries []stsd_entry
 }
+
 type stsd_entry struct {
 	typ  [4]byte
-	body encoded_box
+	body encoded_box // headed by sample_entry
 }
 
 func (this *encoded_box) to_stsd() stsd_box {
@@ -32,18 +33,64 @@ func (this *encoded_box) to_stsd() stsd_box {
 	return v
 }
 
-type generic_sample_description struct {
-	Reserved       [6]byte
-	DataReferIndex uint16 // dref index
+// generic sample description
+type sample_entry struct { // isn't full box
+	_ [6]byte // reserved         [6]byte
+	_ uint16  // data_refer_index uint16 // dref index
 }
 
-var (
-	sample_description_data_formats = [...]string{`jpeg`, `png `, `mp4v`, `avc1`, `gif `,
-		`h263`, `tiff`, `mp4a`, `avcc`}
-)
+type hint_sample_entry struct { // when handler type is hint
+	sample_entry
+	data []byte
+}
 
+type visual_sample_entry struct { // when handler_type is vide
+	sample_entry
+	_              uint16    // pre_defined     uint16
+	_              uint16    // reserved        uint16
+	_              [3]uint32 // pre_defined2    [3]uint32
+	Width          uint16
+	Height         uint16
+	HoriResolution uint32 //uint16.uint16
+	VertResolution uint32 // uint16.uint16 fixed float
+	_              uint32 // reserved2       uint32
+	FrameCount     uint16 // 1
+	CompressorName [32]byte
+	Depth          uint16
+	_              int16 // pre_defined3    int16
+}
+
+type audio_sample_entry struct { // when handler_type is soun
+	sample_entry
+	_            [2]uint32 // reserved      [2]uint32
+	ChannelCount uint16    // 2
+	SampleSize   uint16    // 16
+	_            uint16    // pre_defined   uint16
+	_            uint16    // reserved2     uint16
+	SampleRate   uint32    // time_scale of media << 16
+}
+
+/*
+type mp4v_box struct {
+	visual_sample_entry
+	esds esds_box
+}
+
+type avc1_box struct {
+	visual_sample_entry
+	config avcc_box
+	// mpeg4bitratebox
+	// mpeg4extensiondescriptorbox
+}
+
+type mp4a_box struct {
+	audio_sample_entry
+	esds esds_box
+}
+*/
+/*
 type video_sample_description_box struct {
-	generic_sample_description
+	sample_entry
 	Version              uint16   // indicating the version number of the compressed data. This is set to 0
 	RevisionLevel        uint16   // 0
 	Vendor               uint32   // appl ?
@@ -59,61 +106,46 @@ type video_sample_description_box struct {
 	Depth                uint16   //1,2,4,8,16, 24, 32, 34, 36, 40 color depth. 34,36,40 means 2-,4-,8-bit grayscale
 	ColorTableID         int16    // -1 means use default color table. mac color table, 0 means self descripted color table
 	//	colr                 colr_box // may be null
-	esds esds_box
-	avcc avcc_box
 }
 
 // avc decoder configuration
-type avcc_box struct {
+type avcc_box struct { // isn't full box
 	AVCDecoderConfigurationRecord []byte
 }
 
-// only used for 'raw' or 'twos'
-type sound_sample_description_v0_box struct {
-	generic_sample_description
-	version         uint16 // sample description version 0
-	revision_level  uint16 // 0
-	vendor          uint32 // 0
-	number_channels uint16 // 1 mono, 2 stereo, or more
-	sample_size     uint16 // 8 = 8 bit , 16 = 16 bit sample
-	compression_id  int16  // 0 or -2
-	packet_size     uint16 // 0
-	sample_rate     uint32 // 16.16 A 32-bit unsigned fixed-point number that indicates the rate at which the sound samples were obtained. This number should match the media’s time scale, that is, the integer portion should match.
-	esds            esds_box
-}
+type AVCDecoderConfigurationRecord struct {
+	configurationVersion       byte // 1
+	AVCProfileIndication       byte
+	profile_compatibility      byte
+	AVCLevelIndication         byte
+	lengthSizeMinusOne         byte //111111xx
+	numOfSequenceParameterSets byte // 111xxxxx
+		[]type struct{  //SPS
+			sequenceParameterSetLength uint16
+			sequenceParameterSetNALUnit []byte //size is sequenceParameterSetLength
+		}  // size is numofsequenceparametersets
+		numOfPictureParameterSets byte
+		[]type struct {  // PPS
+			pictureParameterSetLength uint16
+			pictureParameterSetNALUint []byte  // size is pictureParameterSetLength
+		}
 
-type sound_sample_description_v1_box struct {
-	sound_sample_description_v0_box // version == 1
-	samples_per_packet              uint32
-	bytes_per_packet                uint32
-	bytes_per_frame                 uint32
-	bytes_per_sample                uint32
 }
-
-// used for mp4a and other
-type sound_sample_description_v2_box struct {
-	generic_sample_description
-	version                            uint16 // ==2
-	revision_level                     uint16 // 0
-	vendor                             uint32 // 0
-	always3                            uint16 // == 3
-	always16                           uint16 // 0x0010
-	alwaysminus2                       uint16 // -2
-	always0                            uint16 // 0
-	always65536                        uint32 // 65536
-	size_of_struct_only                uint32 // offset to sound sample description
-	audio_sample_rate                  float64
-	num_audio_channels                 uint32
-	always7F000000                     uint32
-	const_bits_per_channel             uint32 // only for const or uncompressed audio
-	format_specific_flags              uint32 // for lpcm flag
-	const_bytes_per_audio_packet       uint32
-	const_lpcm_frames_per_audio_packet uint32
-}
+*/
+/*
 type esds_box struct { // esds This atom contains an MPEG-4 elementary stream descriptor atom, when codec is mp4v
 	full_box_header
 	ElementaryStreamDescriptor []byte
 }
+
+
+type ElementaryStreamDescriptor struct {
+	esid                   uint32
+	stream_dependency_flag uint32
+	url_flag               byte
+	sl_config_descriptor   uint32
+	ocr_stream_flag        byte
+}*/
 
 /*
 type colr_box struct { //colr
